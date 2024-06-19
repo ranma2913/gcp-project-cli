@@ -1,0 +1,21 @@
+version: "3"
+
+tasks:
+  go-build:
+    desc: Build the app
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - GOFLAGS=-mod=mod go build -o bin/gcloud-project main.go
+
+  go-run:
+    desc: Run the app
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - GOFLAGS=-mod=mod go run main.go
+
+  go-clean:
+    desc: Remove the bin directory
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - rm -rfv bin
+
