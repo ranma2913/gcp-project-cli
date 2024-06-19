@@ -1,0 +1,71 @@
+name: CI - gcloud-project
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        goos: [ darwin ]
+        goarch: [ amd64, arm64 ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: arduino/setup-task@v2
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'gcloud-project/go.mod'
+          cache-dependency-path: "**/*.sum"
+      - run: go version
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            /go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build the Go project
+        working-directory: gcloud-project
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          go build -o ./bin/gcloud-project-${{ matrix.goos }}-${{ matrix.goarch }}
+          du -ah ./bin
+        id: go-build
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: gcloud-project-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: gcloud-project/bin/gcloud-project-${{ matrix.goos }}-${{ matrix.goarch }}
+
+#      - id: create_release
+#        uses: actions/create-release@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          tag_name: ${{ github.ref }}
+#          release_name: Release ${{ github.ref }}
+#          draft: false
+#          prerelease: true
+#
+#      - uses: actions/upload-release-asset@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          upload_url: ${{ steps.create_release.outputs.upload_url }}
+#          asset_path: ./myapp
+#          asset_name: myapp
+#          asset_content_type: application/octet-stream
