@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+sh -c .husky/scripts/clean_files.sh
